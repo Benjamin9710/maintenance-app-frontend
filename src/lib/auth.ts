@@ -1,23 +1,31 @@
 import { Amplify } from 'aws-amplify';
-import { fetchAuthSession } from '@aws-amplify/auth';
+import { fetchAuthSession } from 'aws-amplify/auth';
 
-Amplify.configure({
-  Auth: {
-    Cognito: {
-      userPoolId: import.meta.env.VITE_USER_POOL_ID,
-      userPoolClientId: import.meta.env.VITE_USER_POOL_CLIENT_ID,
-      loginWith: {
-        oauth: {
-          domain: import.meta.env.VITE_OAUTH_DOMAIN,
-          scopes: ['openid', 'email'],
-          redirectSignIn: ['http://localhost:5173'],
-          redirectSignOut: ['http://localhost:5173'],
-          responseType: 'code'
-        }
-      }
-    }
+export function configureAmplify() {
+  try {
+    Amplify.configure({
+      Auth: {
+        Cognito: {
+          userPoolId: import.meta.env.VITE_USER_POOL_ID,
+          userPoolClientId: import.meta.env.VITE_USER_POOL_CLIENT_ID,
+          loginWith: {
+            oauth: {
+              domain: import.meta.env.VITE_OAUTH_DOMAIN,
+              scopes: ['openid', 'email', 'profile'],
+              redirectSignIn: ['http://localhost:5173/'],
+              redirectSignOut: ['http://localhost:5173/'],
+              responseType: 'code',
+            },
+          },
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Failed to configure Amplify:', error);
   }
-});
+}
+
+configureAmplify();
 
 export async function getAccessToken(): Promise<string | null> {
   try {

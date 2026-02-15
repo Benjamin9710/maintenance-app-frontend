@@ -1,4 +1,4 @@
-import { getAccessToken } from './auth';
+import { apiToken } from './apiToken';
 
 interface ApiFetchOptions extends RequestInit {
   auth?: boolean;
@@ -10,7 +10,7 @@ export async function apiFetch<T>(url: string, options: ApiFetchOptions = {}): P
   const headers = new Headers(fetchOptions.headers);
 
   if (auth) {
-    const token = await getAccessToken();
+    const token = apiToken;
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
     }

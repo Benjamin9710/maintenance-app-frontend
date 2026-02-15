@@ -1,8 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App.tsx'
 import './index.css'
-import './lib/auth'  // Configure Amplify at app startup
+import './lib/auth'
+const { default: App } = await import('./App.tsx')
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

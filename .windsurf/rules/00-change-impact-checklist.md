@@ -29,3 +29,4 @@ Use this checklist whenever making changes.
 - `npm run lint`
 - `npm run dev` (manual smoke test in browser)
 - `npm run preview` (production build smoke test)
+- `yarn test:e2e` (automated smoke test for auth/routing)
