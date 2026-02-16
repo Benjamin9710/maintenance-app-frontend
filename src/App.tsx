@@ -6,6 +6,8 @@ import { AuthProvider } from './hooks/AuthContext';
 import { Login } from './pages/Login';
 import { ManagerHome } from './pages/ManagerHome';
 import { ContractorHome } from './pages/ContractorHome';
+import { AdminEntry } from './pages/AdminEntry';
+import { AdminDashboard } from './pages/AdminDashboard';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Header } from './components/Header';
 import { AppLayout } from './components/AppLayout';
@@ -20,6 +22,7 @@ function App() {
           <Header />
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/admin" element={<AdminEntry />} />
             <Route
               path="/"
               element={
@@ -44,6 +47,16 @@ function App() {
                 <ProtectedRoute>
                   <AppLayout>
                     <ContractorHome />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/dashboard"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <AdminDashboard />
                   </AppLayout>
                 </ProtectedRoute>
               }

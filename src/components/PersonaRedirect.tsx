@@ -12,6 +12,10 @@ export function PersonaRedirect() {
     return <Navigate to="/contractor" replace />;
   }
 
+  if (persona === 'admin') {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
   // If authenticated but no persona yet, show loading state
   return <div>Loading...</div>;
 }

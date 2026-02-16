@@ -1,7 +1,7 @@
 import { Amplify } from 'aws-amplify';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
-export type Persona = 'manager' | 'contractor';
+export type Persona = 'manager' | 'contractor' | 'admin';
 
 export function configureAmplifyForPersona(persona: Persona) {
   try {
@@ -11,10 +11,16 @@ export function configureAmplifyForPersona(persona: Persona) {
           userPoolClientId: import.meta.env.VITE_MANAGER_USER_POOL_CLIENT_ID,
           oauthDomain: import.meta.env.VITE_MANAGER_OAUTH_DOMAIN,
         }
-      : {
+      : persona === 'contractor'
+      ? {
           userPoolId: import.meta.env.VITE_CONTRACTOR_USER_POOL_ID,
           userPoolClientId: import.meta.env.VITE_CONTRACTOR_USER_POOL_CLIENT_ID,
           oauthDomain: import.meta.env.VITE_CONTRACTOR_OAUTH_DOMAIN,
+        }
+      : {
+          userPoolId: import.meta.env.VITE_ADMIN_USER_POOL_ID,
+          userPoolClientId: import.meta.env.VITE_ADMIN_USER_POOL_CLIENT_ID,
+          oauthDomain: import.meta.env.VITE_ADMIN_OAUTH_DOMAIN,
         };
 
     Amplify.configure({
@@ -43,7 +49,7 @@ export function configureAmplifyForPersona(persona: Persona) {
 const getStoredPersona = (): Persona => {
   if (typeof window !== 'undefined') {
     const stored = localStorage.getItem('authPersona');
-    return stored === 'manager' || stored === 'contractor' ? stored : 'manager';
+    return stored === 'manager' || stored === 'contractor' || stored === 'admin' ? stored : 'manager';
   }
   return 'manager';
 };

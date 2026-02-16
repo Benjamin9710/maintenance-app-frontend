@@ -3,4 +3,7 @@ node_modules
 
 #build residue
 /dist
+
+#test residue
 /playwright-report
+/test-results
