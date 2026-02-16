@@ -41,4 +41,33 @@ test.describe('Authentication and routing', () => {
     await page.waitForURL(/\/admin$/, { timeout: 10000 });
     await expect(page).toHaveURL(/\/admin$/);
   });
+
+  test.describe('Cognito Hosted UI sign-up disabled', () => {
+    test('manager hosted UI does not show sign-up', async ({ page }) => {
+      await page.goto('https://backend-app-api-dev-dev-auth.auth.ap-southeast-2.amazoncognito.com/oauth2/authorize?client_id=6bd36d510n93a3anb1m2db0qti&response_type=code&scope=openid+email+profile&redirect_uri=http://localhost:5173/');
+      await page.waitForLoadState('networkidle');
+      
+      // Main verification: sign-up should not be visible
+      await expect(page.getByRole('link', { name: /sign.?up/i })).not.toBeVisible();
+      await expect(page.getByText(/sign.?up/i)).not.toBeVisible();
+    });
+
+    test('contractor hosted UI does not show sign-up', async ({ page }) => {
+      await page.goto('https://backend-app-api-dev-dev-contractor-auth.auth.ap-southeast-2.amazoncognito.com/oauth2/authorize?client_id=5s4fctfpciv6smu5ig34a2mma6&response_type=code&scope=openid+email+profile&redirect_uri=http://localhost:5173/');
+      await page.waitForLoadState('networkidle');
+      
+      // Main verification: sign-up should not be visible
+      await expect(page.getByRole('link', { name: /sign.?up/i })).not.toBeVisible();
+      await expect(page.getByText(/sign.?up/i)).not.toBeVisible();
+    });
+
+    test('admin hosted UI does not show sign-up', async ({ page }) => {
+      await page.goto('https://backend-app-api-dev-dev-admin-auth.auth.ap-southeast-2.amazoncognito.com/oauth2/authorize?client_id=3jlk2v3nml59elf5hdilifo1e0&response_type=code&scope=openid+email+profile&redirect_uri=http://localhost:5173/');
+      await page.waitForLoadState('networkidle');
+      
+      // Main verification: sign-up should not be visible
+      await expect(page.getByRole('link', { name: /sign.?up/i })).not.toBeVisible();
+      await expect(page.getByText(/sign.?up/i)).not.toBeVisible();
+    });
+  });
 });
