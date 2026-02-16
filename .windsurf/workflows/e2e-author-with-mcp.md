@@ -4,7 +4,7 @@ description: Author and update E2E tests using Playwright MCP browser for explor
 
 ## Prerequisites
 
-- `.env` must contain `VITE_TEST_EMAIL` and `VITE_TEST_PASSWORD` with valid Cognito test user credentials.
+- `.env` must contain `VITE_MANAGER_TEST_EMAIL`, `VITE_MANAGER_TEST_PASSWORD`, `VITE_CONTRACTOR_TEST_EMAIL`, and `VITE_CONTRACTOR_TEST_PASSWORD` with valid Cognito test user credentials for both personas.
 - Dev server must be running on port 5173.
 
 ## Steps
@@ -16,30 +16,47 @@ description: Author and update E2E tests using Playwright MCP browser for explor
    yarn dev
    ```
 
-2. Read test credentials from `.env` (`VITE_TEST_EMAIL` and `VITE_TEST_PASSWORD`).
+2. Read test credentials from `.env`:
+   - Manager: `VITE_MANAGER_TEST_EMAIL` and `VITE_MANAGER_TEST_PASSWORD`
+   - Contractor: `VITE_CONTRACTOR_TEST_EMAIL` and `VITE_CONTRACTOR_TEST_PASSWORD`
 
 3. Open the Playwright MCP browser and navigate to `http://127.0.0.1:5173`.
 
-4. If redirected to `/login`, click the Login button. This will redirect to the Cognito hosted UI.
+4. If redirected to `/login`, verify both persona buttons are visible:
+   - "Sign in as Manager" button
+   - "Sign in as Contractor" button
 
-5. On the Cognito hosted UI (`*.amazoncognito.com`):
-   - Take a snapshot to identify the email/username and password fields.
-   - Fill in `VITE_TEST_EMAIL` into the email/username field.
-   - Fill in `VITE_TEST_PASSWORD` into the password field.
-   - Click the Sign in button.
+5. **For Manager testing:**
+   - Click the "Sign in as Manager" button. This will redirect to the Manager Cognito hosted UI.
+   - On the Cognito hosted UI (`*.amazoncognito.com`):
+     - Take a snapshot to identify the email/username and password fields.
+     - Fill in `VITE_MANAGER_TEST_EMAIL` into the email/username field.
+     - Fill in `VITE_MANAGER_TEST_PASSWORD` into the password field.
+     - Click the Sign in button.
 
-6. After sign-in, Cognito redirects back to `http://127.0.0.1:5173/`. Wait for the page to settle (use `browser_wait_for` or snapshot) and confirm the authenticated state (e.g., Sign Out button visible, no Login button).
+6. **For Contractor testing:**
+   - Click the "Sign in as Contractor" button. This will redirect to the Contractor Cognito hosted UI.
+   - On the Cognito hosted UI (`*.amazoncognito.com`):
+     - Take a snapshot to identify the email/username and password fields.
+     - Fill in `VITE_CONTRACTOR_TEST_EMAIL` into the email/username field.
+     - Fill in `VITE_CONTRACTOR_TEST_PASSWORD` into the password field.
+     - Click the Sign in button.
 
-7. Explore the intended flow using `browser_snapshot` and identify robust selectors (prefer `getByRole` for buttons, headings, etc.).
+7. After sign-in, Cognito redirects back to `http://127.0.0.1:5173/`. Wait for the page to settle (use `browser_wait_for` or snapshot) and confirm:
+   - Manager users are redirected to `/manager` and see the Manager Dashboard
+   - Contractor users are redirected to `/contractor` and see the Contractor Dashboard
+   - Verify the authenticated state (e.g., Sign Out button visible, persona-specific content)
 
-8. Create or update a test spec under `e2e/` (e.g., `e2e/auth.spec.ts`), encoding the explored steps.
+8. Explore the intended flow using `browser_snapshot` and identify robust selectors (prefer `getByRole` for buttons, headings, etc.).
 
-9. Run tests to verify:
-   ```
-   yarn test:e2e
-   ```
+9. Create or update a test spec under `e2e/` (e.g., `e2e/auth.spec.ts`), encoding the explored steps for both personas.
 
-10. If needed, debug interactively:
+10. Run tests to verify:
+    ```
+    yarn test:e2e
+    ```
+
+11. If needed, debug interactively:
     ```
     yarn test:e2e:ui
     ```

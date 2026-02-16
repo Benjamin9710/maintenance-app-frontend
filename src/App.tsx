@@ -3,11 +3,13 @@ import { CssBaseline } from '@mui/material';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { theme } from './lib/theme';
 import { AuthProvider } from './hooks/AuthContext';
-import { Home } from './pages/Home';
 import { Login } from './pages/Login';
+import { ManagerHome } from './pages/ManagerHome';
+import { ContractorHome } from './pages/ContractorHome';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Header } from './components/Header';
 import { AppLayout } from './components/AppLayout';
+import { PersonaRedirect } from './components/PersonaRedirect';
 
 function App() {
   return (
@@ -22,8 +24,26 @@ function App() {
               path="/"
               element={
                 <ProtectedRoute>
+                  <PersonaRedirect />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/manager"
+              element={
+                <ProtectedRoute>
                   <AppLayout>
-                    <Home />
+                    <ManagerHome />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/contractor"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <ContractorHome />
                   </AppLayout>
                 </ProtectedRoute>
               }

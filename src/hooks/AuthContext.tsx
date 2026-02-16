@@ -2,12 +2,14 @@ import { createContext, useState, useEffect, useCallback, type ReactNode } from 
 import { type AuthUser, getCurrentUser, signInWithRedirect, signOut, fetchAuthSession } from 'aws-amplify/auth';
 import { Hub } from 'aws-amplify/utils';
 import { setApiToken } from '../lib/apiToken';
+import type { Persona } from '../lib/auth';
 
 export interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
   error: string | null;
   apiSessionToken: string | null;
+  persona: Persona | null;
   login: () => void;
   logout: () => void;
   isAuthenticated: boolean;
@@ -21,6 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [apiSessionToken, setApiSessionToken] = useState<string | null>(null);
+  const [persona, setPersona] = useState<Persona | null>(null);
 
   const createSession = useCallback(async () => {
     try {
@@ -38,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const data = await response.json();
         setApiSessionToken(data.sessionToken);
         setApiToken(data.sessionToken);
+        setPersona(data.persona);
       } else {
         console.error('Failed to create session');
         setError('Failed to create API session');
@@ -46,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Create session failed', error);
       setError('Failed to create API session');
     }
-  }, []);
+  }, [setApiSessionToken, setPersona, setError]);
 
   const checkAuthState = useCallback(async () => {
     try {
@@ -55,11 +59,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(currentUser);
       if (currentUser) {
         await createSession();
+      } else {
+        setPersona(null);
       }
     } catch (err) {
       setUser(null);
       setApiSessionToken(null);
       setApiToken(null);
+      setPersona(null);
       // Don't set error for normal "not authenticated" state
       if (err instanceof Error && !err.message.includes('not authenticated')) {
         setError('Authentication check failed');
@@ -67,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [createSession]);
+  }, [createSession, setUser, setApiSessionToken, setPersona, setError, setLoading]);
 
   const login = useCallback(() => {
     setError(null);
@@ -87,12 +94,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setApiSessionToken(null);
       setApiToken(null);
+      setPersona(null);
     } catch (err) {
       console.error('Logout failed:', err);
       setError('Logout failed');
       // Force clear user state even if signOut fails
       setUser(null);
       setApiSessionToken(null);
+      setPersona(null);
     }
   }, [apiSessionToken]);
 
@@ -142,6 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     error,
     apiSessionToken,
+    persona,
     login,
     logout,
     isAuthenticated: !!user,

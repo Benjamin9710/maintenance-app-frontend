@@ -7,11 +7,20 @@ import {
   Typography,
 } from '@mui/material';
 import BuildIcon from '@mui/icons-material/Build';
-import LoginIcon from '@mui/icons-material/Login';
+import BusinessIcon from '@mui/icons-material/Business';
+import EngineeringIcon from '@mui/icons-material/Engineering';
 import { useAuth } from '../hooks/useAuth';
+import { configureAmplifyForPersona, type Persona } from '../lib/auth';
+import { signInWithRedirect } from 'aws-amplify/auth';
 
 export function Login() {
-  const { login, isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+
+  const handlePersonaLogin = async (persona: Persona) => {
+    localStorage.setItem('authPersona', persona);
+    configureAmplifyForPersona(persona);
+    await signInWithRedirect();
+  };
 
   if (loading) {
     return (
@@ -83,16 +92,29 @@ export function Login() {
           and track maintenance across your properties.
         </Typography>
 
-        <Button
-          variant="contained"
-          size="large"
-          fullWidth
-          startIcon={<LoginIcon />}
-          onClick={login}
-          sx={{ py: 1.5, fontSize: '1rem' }}
-        >
-          Sign In
-        </Button>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Button
+            variant="contained"
+            size="large"
+            fullWidth
+            startIcon={<BusinessIcon />}
+            onClick={() => handlePersonaLogin('manager')}
+            sx={{ py: 1.5, fontSize: '1rem' }}
+          >
+            Sign in as Manager
+          </Button>
+
+          <Button
+            variant="outlined"
+            size="large"
+            fullWidth
+            startIcon={<EngineeringIcon />}
+            onClick={() => handlePersonaLogin('contractor')}
+            sx={{ py: 1.5, fontSize: '1rem' }}
+          >
+            Sign in as Contractor
+          </Button>
+        </Box>
 
         <Typography
           variant="caption"

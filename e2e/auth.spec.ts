@@ -7,10 +7,11 @@ test.describe('Authentication and routing', () => {
     await expect(page).toHaveURL(/\/login$/);
   });
 
-  test('login page renders login button', async ({ page }) => {
+  test('login page renders both persona sign-in buttons', async ({ page }) => {
     await page.goto('/login');
     await page.waitForLoadState('networkidle');
-    await expect(page.getByRole('button', { name: 'Login' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign in as Manager' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign in as Contractor' })).toBeVisible();
   });
 
   test('sign out button is not visible on login page', async ({ page }) => {
