@@ -1,9 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Box, Typography, Container } from '@mui/material';
-import { signInWithRedirect } from 'aws-amplify/auth';
+import { signInWithRedirect, signOut, getCurrentUser } from 'aws-amplify/auth';
 import { configureAmplifyForPersona } from '../lib/auth';
 
 export function AdminEntry() {
+  const [isSigningIn, setIsSigningIn] = useState(false);
+
   useEffect(() => {
     // Set the persona in localStorage before Amplify configuration
     localStorage.setItem('authPersona', 'admin');
@@ -11,10 +13,27 @@ export function AdminEntry() {
   }, []);
 
   const handleAdminSignIn = async () => {
+    if (isSigningIn) return; // Prevent multiple clicks
+    
     try {
+      setIsSigningIn(true);
+      
+      // Check if there's an existing authenticated user and sign them out first
+      try {
+        const currentUser = await getCurrentUser();
+        if (currentUser) {
+          await signOut();
+          // Give a brief moment for sign-out to complete
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      } catch {
+        // No user authenticated, continue with sign-in
+      }
+      
       await signInWithRedirect();
     } catch (error) {
       console.error('Admin sign-in error:', error);
+      setIsSigningIn(false);
     }
   };
 
@@ -38,9 +57,10 @@ export function AdminEntry() {
           variant="contained"
           size="large"
           onClick={handleAdminSignIn}
+          disabled={isSigningIn}
           sx={{ minWidth: 200 }}
         >
-          Sign in as Admin
+          {isSigningIn ? 'Signing in...' : 'Sign in as Admin'}
         </Button>
       </Box>
     </Container>

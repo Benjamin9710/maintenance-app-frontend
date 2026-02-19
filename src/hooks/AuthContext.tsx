@@ -1,7 +1,6 @@
 import { createContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { type AuthUser, getCurrentUser, signInWithRedirect, signOut, fetchAuthSession } from 'aws-amplify/auth';
 import { Hub } from 'aws-amplify/utils';
-import { setApiToken } from '../lib/apiToken';
 import type { Persona } from '../lib/auth';
 
 export interface AuthContextValue {
@@ -9,6 +8,7 @@ export interface AuthContextValue {
   loading: boolean;
   error: string | null;
   apiSessionToken: string | null;
+  apiToken: string | null;
   persona: Persona | null;
   login: () => void;
   logout: () => void;
@@ -23,34 +23,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [apiSessionToken, setApiSessionToken] = useState<string | null>(null);
+  const [apiToken, setApiToken] = useState<string | null>(null);
   const [persona, setPersona] = useState<Persona | null>(null);
 
-  const createSession = useCallback(async () => {
-    try {
-      const session = await fetchAuthSession();
-      const idToken = session.tokens?.idToken?.toString();
-      if (!idToken) return;
+  useEffect(() => {
+    const storedToken = localStorage.getItem('apiToken');
+    if (storedToken) {
+      setApiToken(storedToken);
+    }
+  }, []);
 
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/session`, {
+  const createApiSession = useCallback(async (currentUser: AuthUser) => {
+    if (!currentUser) {
+      throw new Error('User must be authenticated to create API session');
+    }
+
+    try {
+      const response = await fetch('/api/auth/session', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          idToken: (await fetchAuthSession()).tokens?.idToken?.toString() 
+        }),
       });
 
       if (response.ok) {
         const data = await response.json();
         setApiSessionToken(data.sessionToken);
         setApiToken(data.sessionToken);
-        setPersona(data.persona);
+        localStorage.setItem('apiToken', data.sessionToken);
+        // Use backend persona if provided, otherwise fallback to localStorage
+        if (data.persona) {
+          setPersona(data.persona);
+        } else {
+          const storedPersona = localStorage.getItem('authPersona') as Persona;
+          setPersona(storedPersona || 'manager');
+        }
       } else {
         console.error('Failed to create session');
-        setError('Failed to create API session');
+        // Fallback to localStorage persona if API fails
+        const storedPersona = localStorage.getItem('authPersona') as Persona;
+        setPersona(storedPersona || 'manager');
       }
     } catch (error) {
-      console.error('Create session failed', error);
-      setError('Failed to create API session');
+      console.error('Error creating API session:', error);
+      // Fallback to localStorage persona if there's an error
+      const storedPersona = localStorage.getItem('authPersona') as Persona;
+      setPersona(storedPersona || 'manager');
     }
-  }, [setApiSessionToken, setPersona, setError]);
+  }, []);
 
   const checkAuthState = useCallback(async () => {
     try {
@@ -58,15 +81,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const currentUser = await getCurrentUser();
       setUser(currentUser);
       if (currentUser) {
-        await createSession();
+        await createApiSession(currentUser);
       } else {
-        setPersona(null);
+        // When not authenticated, use localStorage persona if available
+        const storedPersona = localStorage.getItem('authPersona') as Persona;
+        setPersona(storedPersona || null);
       }
     } catch (err) {
       setUser(null);
       setApiSessionToken(null);
       setApiToken(null);
-      setPersona(null);
+      // When auth check fails, use localStorage persona if available
+      const storedPersona = localStorage.getItem('authPersona') as Persona;
+      setPersona(storedPersona || null);
       // Don't set error for normal "not authenticated" state
       if (err instanceof Error && !err.message.includes('not authenticated')) {
         setError('Authentication check failed');
@@ -74,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [createSession, setUser, setApiSessionToken, setPersona, setError, setLoading]);
+  }, [createApiSession, setUser, setApiSessionToken, setPersona, setError, setLoading]);
 
   const login = useCallback(() => {
     setError(null);
@@ -94,6 +121,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setApiSessionToken(null);
       setApiToken(null);
+      localStorage.removeItem('apiToken');
+      localStorage.removeItem('authPersona');
       setPersona(null);
     } catch (err) {
       console.error('Logout failed:', err);
@@ -101,6 +130,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Force clear user state even if signOut fails
       setUser(null);
       setApiSessionToken(null);
+      localStorage.removeItem('apiToken');
+      localStorage.removeItem('authPersona');
       setPersona(null);
     }
   }, [apiSessionToken]);
@@ -152,7 +183,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     error,
     apiSessionToken,
     persona,
-    login,
+    apiToken,
+  login,
     logout,
     isAuthenticated: !!user,
     refreshTokens,

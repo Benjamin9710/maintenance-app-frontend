@@ -8,9 +8,11 @@ import { ManagerHome } from './pages/ManagerHome';
 import { ContractorHome } from './pages/ContractorHome';
 import { AdminEntry } from './pages/AdminEntry';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { AdminManagers } from './pages/AdminManagers';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Header } from './components/Header';
 import { AppLayout } from './components/AppLayout';
+import { AdminLayout } from './components/AdminLayout';
 import { PersonaRedirect } from './components/PersonaRedirect';
 
 function App() {
@@ -54,9 +56,23 @@ function App() {
             <Route
               path="/admin/dashboard"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireAdmin>
                   <AppLayout>
-                    <AdminDashboard />
+                    <AdminLayout>
+                      <AdminDashboard />
+                    </AdminLayout>
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/managers"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AppLayout>
+                    <AdminLayout>
+                      <AdminManagers />
+                    </AdminLayout>
                   </AppLayout>
                 </ProtectedRoute>
               }

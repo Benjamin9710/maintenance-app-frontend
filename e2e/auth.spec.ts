@@ -42,6 +42,12 @@ test.describe('Authentication and routing', () => {
     await expect(page).toHaveURL(/\/admin$/);
   });
 
+  test('unauthenticated admin managers redirects', async ({ page }) => {
+    await page.goto('/admin/managers');
+    await page.waitForURL(/\/admin$/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/admin$/);
+  });
+
   test.describe('Cognito Hosted UI sign-up disabled', () => {
     test('manager hosted UI does not show sign-up', async ({ page }) => {
       await page.goto('https://backend-app-api-dev-dev-auth.auth.ap-southeast-2.amazoncognito.com/oauth2/authorize?client_id=6bd36d510n93a3anb1m2db0qti&response_type=code&scope=openid+email+profile&redirect_uri=http://localhost:5173/');
