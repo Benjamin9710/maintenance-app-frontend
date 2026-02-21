@@ -1,4 +1,4 @@
-import { ManagerSummary, CreateManagerRequest, PaginatedManagers, ListManagersOptions } from '../types/admin';
+import { ManagerSummary, CreateManagerRequest, PaginatedManagers, ListManagersOptions, ContractorSummary, CreateContractorRequest, PaginatedContractors, ListContractorsOptions } from '../types/admin';
 
 export const api = {
   // placeholder for generated API client
@@ -86,6 +86,68 @@ export const adminApi = {
         throw error;
       }
       throw new Error('Failed to create manager');
+    }
+  },
+
+  // Contractor management endpoints
+  async getContractors(options?: ListContractorsOptions): Promise<PaginatedContractors> {
+    try {
+      const token = getApiToken();
+      
+      // Build query string
+      const params = new URLSearchParams();
+      if (options?.limit) {
+        params.append('limit', options.limit.toString());
+      }
+      if (options?.paginationToken) {
+        params.append('paginationToken', options.paginationToken);
+      }
+      
+      const queryString = params.toString();
+      const url = `/api/admin/contractors${queryString ? `?${queryString}` : ''}`;
+      
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        handleApiError(response, 'Failed to load contractors');
+      }
+      
+      return response.json();
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Failed to load contractors');
+    }
+  },
+
+  async createContractor(request: CreateContractorRequest): Promise<ContractorSummary> {
+    try {
+      const token = getApiToken();
+      const response = await fetch('/api/admin/contractors', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+      });
+      
+      if (!response.ok) {
+        handleApiError(response, 'Failed to create contractor');
+      }
+      
+      return response.json();
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Failed to create contractor');
     }
   },
 };

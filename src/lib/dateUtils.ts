@@ -14,7 +14,7 @@ export const formatDate = (dateString: string): string => {
       month: 'short',
       day: 'numeric',
     });
-  } catch (error) {
+  } catch {
     return 'Invalid date';
   }
 };
@@ -33,7 +33,7 @@ export const formatDateTime = (dateString: string): string => {
       hour: '2-digit',
       minute: '2-digit',
     });
-  } catch (error) {
+  } catch {
     return 'Invalid date';
   }
 };
@@ -66,7 +66,7 @@ export const formatRelativeTime = (dateString: string): string => {
       const years = Math.floor(diffDays / 365);
       return `${years} year${years > 1 ? 's' : ''} ago`;
     }
-  } catch (error) {
+  } catch {
     return 'Invalid date';
   }
 };

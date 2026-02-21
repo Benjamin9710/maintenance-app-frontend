@@ -12,6 +12,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     if (location.pathname === '/admin/managers') {
       return 1;
     }
+    if (location.pathname === '/admin/contractors') {
+      return 2;
+    }
     return 0; // Default to dashboard
   };
 
@@ -29,6 +32,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             label="Managers" 
             component={Link} 
             to="/admin/managers" 
+            sx={{ textTransform: 'none' }}
+          />
+          <Tab 
+            label="Contractors" 
+            component={Link} 
+            to="/admin/contractors" 
             sx={{ textTransform: 'none' }}
           />
         </Tabs>

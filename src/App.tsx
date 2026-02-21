@@ -9,6 +9,7 @@ import { ContractorHome } from './pages/ContractorHome';
 import { AdminEntry } from './pages/AdminEntry';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AdminManagers } from './pages/AdminManagers';
+import { AdminContractors } from './pages/AdminContractors';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Header } from './components/Header';
 import { AppLayout } from './components/AppLayout';
@@ -72,6 +73,18 @@ function App() {
                   <AppLayout>
                     <AdminLayout>
                       <AdminManagers />
+                    </AdminLayout>
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/contractors"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AppLayout>
+                    <AdminLayout>
+                      <AdminContractors />
                     </AdminLayout>
                   </AppLayout>
                 </ProtectedRoute>
