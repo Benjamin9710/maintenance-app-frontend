@@ -26,3 +26,4 @@
 - When changing routing/auth behavior, update pages/components/hooks together.
 - **All TypeScript errors must be resolved before considering a task complete.** Run `yarn build` to verify zero type errors after every code change.
 - Package manager is Yarn 4 with `nodeLinker: node-modules` (`.yarnrc.yml`). Use `yarn install` after dependency changes.
+- When adding new guidance files, follow anti-duplication principles in `.windsurf/rules/50-organization-and-anti-duplication.md`

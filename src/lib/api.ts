@@ -1,4 +1,4 @@
-import { ManagerSummary, CreateManagerRequest, PaginatedManagers, ListManagersOptions, ContractorSummary, CreateContractorRequest, PaginatedContractors, ListContractorsOptions } from '../types/admin';
+import { ManagerSummary, CreateManagerRequest, PaginatedManagers, ListManagersOptions, ContractorSummary, CreateContractorRequest, PaginatedContractors, ListContractorsOptions, Property, CreatePropertyRequest, UpdatePropertyRequest, PaginatedProperties, ListPropertiesOptions } from '../types/admin';
 
 export const api = {
   // placeholder for generated API client
@@ -148,6 +148,189 @@ export const adminApi = {
         throw error;
       }
       throw new Error('Failed to create contractor');
+    }
+  },
+
+  // Property management endpoints
+  async getManagerProperties(managerSub: string, options?: ListPropertiesOptions): Promise<PaginatedProperties> {
+    try {
+      const token = getApiToken();
+      
+      // Build query string
+      const params = new URLSearchParams();
+      if (options?.limit) {
+        params.append('limit', options.limit.toString());
+      }
+      if (options?.paginationToken) {
+        params.append('paginationToken', options.paginationToken);
+      }
+      if (options?.includeArchived) {
+        params.append('includeArchived', 'true');
+      }
+      
+      const queryString = params.toString();
+      const url = `/api/admin/managers/${managerSub}/properties${queryString ? `?${queryString}` : ''}`;
+      
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        handleApiError(response, 'Failed to load properties');
+      }
+      
+      const data = await response.json();
+      
+      // Validate response structure
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid response format');
+      }
+      
+      if (!Array.isArray(data.properties)) {
+        throw new Error('Invalid properties data format');
+      }
+      
+      return {
+        properties: data.properties,
+        paginationToken: data.paginationToken,
+        hasMore: Boolean(data.hasMore),
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Failed to load properties');
+    }
+  },
+
+  async createProperty(managerSub: string, request: CreatePropertyRequest): Promise<Property> {
+    try {
+      const token = getApiToken();
+      const response = await fetch(`/api/admin/managers/${managerSub}/properties`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+      });
+      
+      if (!response.ok) {
+        handleApiError(response, 'Failed to create property');
+      }
+      
+      const data = await response.json();
+      
+      // Validate response structure
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid response format');
+      }
+      
+      if (!data.id || !data.name || !data.addressLine1) {
+        throw new Error('Invalid property data format');
+      }
+      
+      return data as Property;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Failed to create property');
+    }
+  },
+
+  async getProperty(propertyId: string): Promise<Property> {
+    try {
+      const token = getApiToken();
+      const response = await fetch(`/api/admin/properties/${propertyId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        handleApiError(response, 'Failed to load property');
+      }
+      
+      const data = await response.json();
+      
+      // Validate response structure
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid response format');
+      }
+      
+      if (!data.id || !data.name || !data.addressLine1) {
+        throw new Error('Invalid property data format');
+      }
+      
+      return data as Property;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Failed to load property');
+    }
+  },
+
+  async updateProperty(propertyId: string, request: UpdatePropertyRequest): Promise<Property> {
+    try {
+      const token = getApiToken();
+      const response = await fetch(`/api/admin/properties/${propertyId}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+      });
+      
+      if (!response.ok) {
+        handleApiError(response, 'Failed to update property');
+      }
+      
+      const data = await response.json();
+      
+      // Validate response structure
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid response format');
+      }
+      
+      if (!data.id || !data.name || !data.addressLine1) {
+        throw new Error('Invalid property data format');
+      }
+      
+      return data as Property;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Failed to update property');
+    }
+  },
+
+  async archiveProperty(propertyId: string): Promise<void> {
+    try {
+      const token = getApiToken();
+      const response = await fetch(`/api/admin/properties/${propertyId}/archive`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        handleApiError(response, 'Failed to archive property');
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Failed to archive property');
     }
   },
 };

@@ -10,6 +10,7 @@ import { AdminEntry } from './pages/AdminEntry';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AdminManagers } from './pages/AdminManagers';
 import { AdminContractors } from './pages/AdminContractors';
+import { AdminProperties } from './pages/AdminProperties';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Header } from './components/Header';
 import { AppLayout } from './components/AppLayout';
@@ -85,6 +86,18 @@ function App() {
                   <AppLayout>
                     <AdminLayout>
                       <AdminContractors />
+                    </AdminLayout>
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/managers/:managerSub/properties"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AppLayout>
+                    <AdminLayout>
+                      <AdminProperties />
                     </AdminLayout>
                   </AppLayout>
                 </ProtectedRoute>

@@ -19,7 +19,8 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
+import { Add as AddIcon, Home as HomeIcon } from '@mui/icons-material';
+import { Link } from 'react-router-dom';
 import { adminApi } from '../lib/api';
 import { ManagerSummary, CreateManagerRequest, PaginatedManagers } from '../types/admin';
 import { validateCreateManagerRequest, getFieldError, ValidationError } from '../lib/validation';
@@ -169,12 +170,13 @@ export function AdminManagers() {
                 <TableCell>Phone</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Created</TableCell>
+                <TableCell>Properties</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {managers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} align="center">
+                  <TableCell colSpan={6} align="center">
                     <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
                       No managers found. Create your first manager to get started.
                     </Typography>
@@ -200,6 +202,17 @@ export function AdminManagers() {
                     </TableCell>
                     <TableCell>
                       {formatDate(manager.createdAt)}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<HomeIcon />}
+                        component={Link}
+                        to={`/admin/managers/${manager.cognitoSub}/properties`}
+                      >
+                        Manage Properties
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))

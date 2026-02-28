@@ -64,3 +64,54 @@ export interface ListContractorsOptions {
   limit?: number;
   paginationToken?: string;
 }
+
+// Property types
+export interface Property {
+  id: string;
+  ownerManagerSub: string;
+  name: string;
+  addressLine1: string;
+  addressLine2?: string;
+  suburb: string;
+  state: string;
+  postcode: string;
+  country: string;
+  timezone?: string;
+  createdAt: string;
+  updatedAt: string;
+  archivedAt?: string;
+}
+
+export interface CreatePropertyRequest {
+  name: string;
+  addressLine1: string;
+  addressLine2?: string;
+  suburb: string;
+  state: string;
+  postcode: string;
+  country: string;
+  timezone?: string;
+}
+
+export interface UpdatePropertyRequest {
+  name?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  suburb?: string;
+  state?: string;
+  postcode?: string;
+  country?: string;
+  timezone?: string;
+}
+
+export interface PaginatedProperties {
+  properties: Property[];
+  paginationToken?: string;
+  hasMore: boolean;
+}
+
+export interface ListPropertiesOptions {
+  limit?: number;
+  paginationToken?: string;
+  includeArchived?: boolean;
+}
