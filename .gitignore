@@ -1,5 +1,7 @@
 #dependencies
 node_modules
+.yarn
+.DS_Store
 
 #build residue
 /dist
@@ -7,3 +9,4 @@ node_modules
 #test residue
 playwright-report
 test-results
+coverage

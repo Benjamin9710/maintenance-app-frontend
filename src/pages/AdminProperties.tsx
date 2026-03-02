@@ -25,14 +25,16 @@ import {
   Chip,
   IconButton,
   Menu,
+  FormControlLabel,
+  Switch,
 } from '@mui/material';
 import {
   Add as AddIcon,
-  MoreVert as MoreVertIcon,
   Edit as EditIcon,
   Archive as ArchiveIcon,
+  MoreVert as MoreVertIcon,
 } from '@mui/icons-material';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { adminApi } from '../lib/api';
 import { ManagerSummary, Property, CreatePropertyRequest, UpdatePropertyRequest, PaginatedProperties, ListPropertiesOptions } from '../types/admin';
 import { validateCreatePropertyRequest, validateUpdatePropertyRequest, getPropertyFieldError, ValidationError } from '../lib/validation';
@@ -68,6 +70,7 @@ interface AdminPropertiesProps {
 
 export function AdminProperties({ manager: propManager }: AdminPropertiesProps) {
   const { managerSub } = useParams<{ managerSub: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,6 +79,9 @@ export function AdminProperties({ manager: propManager }: AdminPropertiesProps) 
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [manager] = useState<ManagerSummary | undefined>(propManager);
+  
+  // Get includeArchived from URL params, default to false
+  const includeArchived = searchParams.get('includeArchived') === 'true';
   
   // Create property dialog state
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -104,8 +110,25 @@ export function AdminProperties({ manager: propManager }: AdminPropertiesProps) 
   // Menu state
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  
+  // Property details dialog state
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [detailsProperty, setDetailsProperty] = useState<Property | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsError, setDetailsError] = useState<string | null>(null);
 
   const targetManagerSub = managerSub || manager?.cognitoSub;
+
+  // Handle toggle change
+  const handleToggleIncludeArchived = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const newIncludeArchived = event.target.checked;
+    if (newIncludeArchived) {
+      searchParams.set('includeArchived', 'true');
+    } else {
+      searchParams.delete('includeArchived');
+    }
+    setSearchParams(searchParams);
+  }, [searchParams, setSearchParams]);
 
   // Memoized manager name resolution
   const resolvedManagerName = React.useMemo(() => {
@@ -121,7 +144,7 @@ export function AdminProperties({ manager: propManager }: AdminPropertiesProps) 
       loadProperties();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetManagerSub]);
+  }, [targetManagerSub, includeArchived]);
 
   const loadProperties = useCallback(async (reset = true) => {
     if (!targetManagerSub) {
@@ -140,7 +163,9 @@ export function AdminProperties({ manager: propManager }: AdminPropertiesProps) 
         setLoadingMore(true);
       }
       
-      const options: ListPropertiesOptions = reset ? {} : { paginationToken, limit: 20 };
+      const options: ListPropertiesOptions = reset 
+        ? { includeArchived } 
+        : { paginationToken, limit: 20, includeArchived };
       const data: PaginatedProperties = await adminApi.getManagerProperties(targetManagerSub, options);
       
       if (reset) {
@@ -160,7 +185,7 @@ export function AdminProperties({ manager: propManager }: AdminPropertiesProps) 
         setLoadingMore(false);
       }
     }
-  }, [targetManagerSub, paginationToken]);
+  }, [targetManagerSub, paginationToken, includeArchived]);
 
   const loadMoreProperties = React.useCallback(() => {
     if (!loadingMore && hasMore && paginationToken && targetManagerSub) {
@@ -286,6 +311,29 @@ export function AdminProperties({ manager: propManager }: AdminPropertiesProps) 
     setSelectedProperty(property);
   }, []);
 
+  const handleViewPropertyDetails = useCallback(async (property: Property) => {
+    try {
+      setDetailsLoading(true);
+      setDetailsError(null);
+      setDetailsProperty(property);
+      setDetailsDialogOpen(true);
+      
+      // Fetch fresh property data
+      const freshProperty = await adminApi.getProperty(property.id);
+      setDetailsProperty(freshProperty);
+    } catch (err) {
+      setDetailsError(err instanceof Error ? err.message : 'Failed to load property details');
+    } finally {
+      setDetailsLoading(false);
+    }
+  }, []);
+
+  const handleCloseDetailsDialog = useCallback(() => {
+    setDetailsDialogOpen(false);
+    setDetailsProperty(null);
+    setDetailsError(null);
+  }, []);
+
 
   if (loading) {
     return (
@@ -305,14 +353,26 @@ export function AdminProperties({ manager: propManager }: AdminPropertiesProps) 
           <Typography variant="h4" component="h1">
             Properties - {resolvedManagerName}
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setCreateDialogOpen(true)}
-            disabled={!targetManagerSub}
-          >
-            Create Property
-          </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={includeArchived}
+                  onChange={handleToggleIncludeArchived}
+                  color="primary"
+                />
+              }
+              label="Include archived"
+            />
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setCreateDialogOpen(true)}
+              disabled={!targetManagerSub}
+            >
+              Create Property
+            </Button>
+          </Box>
         </Box>
 
         {error && (
@@ -344,14 +404,26 @@ export function AdminProperties({ manager: propManager }: AdminPropertiesProps) 
               ) : (
                 properties.map((property) => (
                   <TableRow key={property.id}>
-                    <TableCell>{property.name}</TableCell>
+                    <TableCell>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: property.archivedAt ? 'primary.main' : 'inherit',
+                          cursor: property.archivedAt ? 'pointer' : 'default',
+                          '&:hover': property.archivedAt ? {
+                            textDecoration: 'underline',
+                          } : {},
+                        }}
+                        onClick={() => property.archivedAt && handleViewPropertyDetails(property)}
+                      >
+                        {property.name}
+                      </Typography>
+                    </TableCell>
                     <TableCell>
                       <Typography variant="body2">
                         {property.addressLine1}
-                        {property.addressLine2 && <br />}
-                        {property.addressLine2 && `${property.addressLine2}, `}
-                        {!property.addressLine2 && `, `}
-                        {property.suburb} {property.state} {property.postcode}
+                        {property.addressLine2 && `, ${property.addressLine2}`}
+                        {`, ${property.suburb}`}
                       </Typography>
                     </TableCell>
                     <TableCell>
@@ -622,6 +694,117 @@ export function AdminProperties({ manager: propManager }: AdminPropertiesProps) 
               disabled={editLoading}
             >
               {editLoading ? 'Updating...' : 'Update Property'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Property Details Dialog */}
+        <Dialog open={detailsDialogOpen} onClose={handleCloseDetailsDialog} maxWidth="md" fullWidth>
+          <DialogTitle>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              Property Details
+              {detailsProperty?.archivedAt && (
+                <Chip
+                  label="Archived"
+                  color="default"
+                  size="small"
+                />
+              )}
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+              {detailsError && (
+                <Alert severity="error">
+                  {detailsError}
+                </Alert>
+              )}
+              
+              {detailsLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                  <CircularProgress />
+                </Box>
+              ) : detailsProperty ? (
+                <>
+                  <TextField
+                    label="Property Name"
+                    value={detailsProperty.name}
+                    fullWidth
+                    disabled
+                  />
+                  <TextField
+                    label="Address Line 1"
+                    value={detailsProperty.addressLine1}
+                    fullWidth
+                    disabled
+                  />
+                  <TextField
+                    label="Address Line 2"
+                    value={detailsProperty.addressLine2 || ''}
+                    fullWidth
+                    disabled
+                  />
+                  <TextField
+                    label="Suburb"
+                    value={detailsProperty.suburb}
+                    fullWidth
+                    disabled
+                  />
+                  <TextField
+                    label="State"
+                    value={detailsProperty.state}
+                    fullWidth
+                    disabled
+                  />
+                  <TextField
+                    label="Postcode"
+                    value={detailsProperty.postcode}
+                    fullWidth
+                    disabled
+                  />
+                  <TextField
+                    label="Country"
+                    value={detailsProperty.country}
+                    fullWidth
+                    disabled
+                  />
+                  <TextField
+                    label="Timezone"
+                    value={detailsProperty.timezone || ''}
+                    fullWidth
+                    disabled
+                  />
+                  <TextField
+                    label="Created"
+                    value={formatDate(detailsProperty.createdAt)}
+                    fullWidth
+                    disabled
+                  />
+                  <TextField
+                    label="Last Updated"
+                    value={formatDate(detailsProperty.updatedAt)}
+                    fullWidth
+                    disabled
+                  />
+                  {detailsProperty.archivedAt && (
+                    <TextField
+                      label="Archived"
+                      value={formatDate(detailsProperty.archivedAt)}
+                      fullWidth
+                      disabled
+                    />
+                  )}
+                </>
+              ) : (
+                <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+                  No property details available.
+                </Typography>
+              )}
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDetailsDialog}>
+              Close
             </Button>
           </DialogActions>
         </Dialog>

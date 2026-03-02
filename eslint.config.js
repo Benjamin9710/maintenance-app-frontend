@@ -46,4 +46,12 @@ export default [
       "no-undef": "off",
     },
   },
+  {
+    files: ["**/__tests__/**/*.{ts,tsx}", "**/*.{test,spec}.{ts,tsx}"],
+    languageOptions: {
+      globals: {
+        ...globals.vitest,
+      },
+    },
+  },
 ];
